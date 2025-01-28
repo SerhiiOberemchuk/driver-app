@@ -1,7 +1,10 @@
 import NextAuth from "next-auth";
 // import Google from 'next-auth/providers/google';
+import bcryptjs from "bcryptjs";
 import Credentials from "next-auth/providers/credentials";
 import type { Provider } from "next-auth/providers";
+import { connectDB } from "./app/lib/mongodb";
+import User from "./app/models/User";
 
 const providers: Provider[] = [
   // Google({
@@ -13,13 +16,28 @@ const providers: Provider[] = [
       email: { label: "Email Address", type: "email" },
       password: { label: "Password", type: "password" },
     },
-    authorize(c) {
-      if (c.password !== "password") {
+    async authorize(c) {
+      if (!c.email) {
+        console.log("type credentials");
         return null;
       }
+
+      await connectDB();
+
+      const userFound = await User.findOne({ email: c.email }).select(
+        "+password"
+      );
+
+      const passwordMatch = await bcryptjs.compare(
+        c.password as string,
+        userFound.password
+      );
+
+      if (!passwordMatch) throw new Error("Wrong credentials");
+
       return {
-        id: "test",
-        name: "Test User",
+        id: userFound._id,
+        name: userFound.name || "User",
         email: String(c.email),
       };
     },
