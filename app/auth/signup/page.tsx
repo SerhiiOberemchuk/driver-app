@@ -17,7 +17,7 @@ import { redirect } from "next/navigation";
 import { useNotifications } from "@toolpad/core";
 import Link from "next/link";
 
-function page() {
+function Page() {
   const notifiction = useNotifications();
   const [error, submitAction, isPending] = useActionState(
     async (previosState: any, formData: FormData) => {
@@ -94,7 +94,7 @@ function page() {
             />
 
             <FormHelperText id="user-credential-email">
-              We'll never share your email.
+              We`&apos;`ll never share your email.
             </FormHelperText>
           </FormControl>
           <FormControl>
@@ -106,7 +106,7 @@ function page() {
               required
             />
             <FormHelperText id="user-credential-password">
-              We'll never share your password.
+              We`&apos;`ll never share your password.
             </FormHelperText>
           </FormControl>
           <Button
@@ -128,4 +128,4 @@ function page() {
   );
 }
 
-export default page;
+export default Page;
