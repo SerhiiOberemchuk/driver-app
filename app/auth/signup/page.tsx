@@ -25,7 +25,6 @@ function page() {
       const password = formData.get("password") as string;
 
       const responsedb = await register({ email, password });
-      console.log(previosState);
 
       if (responsedb.error) {
         notifiction.show(responsedb.error, {

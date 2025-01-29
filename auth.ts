@@ -1,55 +1,53 @@
 import NextAuth from "next-auth";
-// import Google from 'next-auth/providers/google';
 import bcryptjs from "bcryptjs";
 import Credentials from "next-auth/providers/credentials";
 import type { Provider } from "next-auth/providers";
-import { connectDB } from "./app/lib/mongodb";
-import User from "./app/models/User";
+
+import { db as prisma } from "./app/lib/db";
+// import { PrismaAdapter } from "@auth/prisma-adapter";
 
 const providers: Provider[] = [
-  // Google({
-  //   clientId: process.env.GOOGLE_CLIENT_ID,
-  //   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  // }),
   Credentials({
     credentials: {
       email: { label: "Email Address", type: "email" },
       password: { label: "Password", type: "password" },
     },
+
     async authorize(c) {
-      if (!c.email) {
-        console.log("type credentials");
-        return null;
+      console.log("start authorize");
+
+      if (!c.email || !c.password) {
+        console.log("Missing credentials");
+        throw new Error("Email and password are required");
       }
 
-      await connectDB();
+      const userFound = await prisma.user.findUnique({
+        where: {
+          email: c.email as string,
+        },
+      });
 
-      const userFound = await User.findOne({ email: c.email }).select(
-        "+password"
-      );
+      if (!userFound || !userFound.password) {
+        throw new Error("Invalid credentials");
+      }
 
       const passwordMatch = await bcryptjs.compare(
         c.password as string,
         userFound.password
       );
 
-      if (!passwordMatch) throw new Error("Wrong credentials");
+      if (!passwordMatch) {
+        throw new Error("Invalid credentials");
+      }
 
       return {
-        id: userFound._id,
+        id: userFound.id,
         name: userFound.name || "User",
-        email: String(c.email),
+        email: userFound.email,
       };
     },
   }),
 ];
-
-// if (!process.env.GOOGLE_CLIENT_ID) {
-//   console.warn('Missing environment variable "GOOGLE_CLIENT_ID"');
-// }
-// if (!process.env.GOOGLE_CLIENT_SECRET) {
-//   console.warn('Missing environment variable "GOOGLE_CLIENT_SECRET"');
-// }
 
 export const providerMap = providers.map((provider) => {
   if (typeof provider === "function") {
@@ -61,7 +59,7 @@ export const providerMap = providers.map((provider) => {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
-
+  // adapter: PrismaAdapter(prisma),
   secret: process.env.AUTH_SECRET,
   pages: {
     signIn: "/auth/signin",
@@ -75,7 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
-      return false; // Redirect unauthenticated users to login page
+      return false;
     },
   },
 });

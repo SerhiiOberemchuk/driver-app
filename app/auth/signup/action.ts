@@ -1,7 +1,7 @@
 "use server";
-
-import { connectDB } from "@/app/lib/mongodb";
-import User from "@/app/models/User";
+import { db } from "../../lib/db";
+// import { connectDB } from "@/app/lib/mongodb";
+// import User from "@/app/models/User";
 
 import bcrypt from "bcryptjs";
 
@@ -19,10 +19,12 @@ export default async function serverSignUp({
   }
 
   try {
-    await connectDB();
+    // await connectDB();
 
-    const userFound = await User.findOne({ email });
+    const userFound = await db.user.findUnique({ where: { email } });
+
     console.log(userFound);
+
     if (userFound) {
       console.log("Email already exists!");
       return {
@@ -32,18 +34,19 @@ export default async function serverSignUp({
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({
-      email,
-      password: hashedPassword,
+    const savedUser = await db.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+      },
     });
-    const savedUser = await user.save();
 
     console.log("Registration successful:", savedUser);
 
     return {
       message: "Registration successful",
       user: {
-        id: savedUser._id.toString(),
+        id: savedUser.id,
         email: savedUser.email,
       },
     };
