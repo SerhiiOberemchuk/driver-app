@@ -119,7 +119,7 @@ function Page() {
           </Button>
 
           <Typography align="center">
-            Already have an account?
+            Already t have an account?
             <Link href="/auth/signin">Sign In</Link>
           </Typography>
         </FormGroup>
