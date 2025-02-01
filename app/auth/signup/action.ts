@@ -1,7 +1,5 @@
 "use server";
 import { db } from "../../lib/db";
-// import { connectDB } from "@/app/lib/mongodb";
-// import User from "@/app/models/User";
 
 import bcrypt from "bcryptjs";
 
@@ -19,8 +17,6 @@ export default async function serverSignUp({
   }
 
   try {
-    // await connectDB();
-
     const userFound = await db.user.findUnique({ where: { email } });
 
     console.log(userFound);
